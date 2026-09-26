@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="MangaReader">
+  <defs>
+    <linearGradient id="mr-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#312e81"/>
+      <stop offset="1" stop-color="#1e1b4b"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#mr-bg)"/>
+  <!-- book cover shadow -->
+  <path d="M32 19 L47 17 L51 45 L32 47 Z" fill="#0b1020" opacity="0.30"/>
+  <path d="M32 19 L17 17 L13 45 L32 47 Z" fill="#0b1020" opacity="0.30"/>
+  <!-- left page -->
+  <path d="M32 21 L18 19 L16 43 L32 45 Z" fill="#f8fafc"/>
+  <!-- right page -->
+  <path d="M32 21 L46 19 L48 43 L32 45 Z" fill="#e2e8f0"/>
+  <!-- speed lines on left page -->
+  <g stroke="#94a3b8" stroke-width="1.1" stroke-linecap="round" opacity="0.75">
+    <line x1="21" y1="27" x2="30" y2="28"/>
+    <line x1="20" y1="32" x2="30" y2="33"/>
+    <line x1="21" y1="37" x2="30" y2="38"/>
+  </g>
+  <!-- panel grid on right page -->
+  <g stroke="#64748b" stroke-width="1" opacity="0.6">
+    <line x1="39" y1="23" x2="39" y2="43"/>
+    <line x1="34" y1="31" x2="47" y2="30"/>
+  </g>
+  <!-- coral bookmark ribbon -->
+  <path d="M29 45 L35 45 L32 53 Z" fill="#e94560"/>
+</svg>
