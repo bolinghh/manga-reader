@@ -15,6 +15,12 @@ import { pickNativeDirectory } from '../services/nativeFiles'
 import { sourceIssueLabel } from '../utils/library'
 
 const lib = useLibrary()
+const hasFilters = computed(() => !!lib.query || lib.activeTag !== null || lib.shelfFilter !== 'all')
+function clearFilters() {
+  lib.query = ''
+  lib.activeTag = null
+  lib.shelfFilter = 'all'
+}
 const translationJobs = useTranslationJobs()
 const fsaSupported = typeof (window as any).showDirectoryPicker === 'function'
 const nativeSupported = nativeAvailable()
@@ -729,8 +735,8 @@ async function applyBatchEdit() {
           <p class="mt-1 text-sm text-[color:var(--text-dim)]">封面与页数准备好后会自动打开</p>
         </div>
 
-        <template v-else-if="lib.filtered.length">
-          <section v-if="recent.length && !lib.query && !lib.activeTag && !selecting" class="mb-12" aria-labelledby="recent-heading">
+        <template v-else-if="lib.comics.length">
+          <section v-if="recent.length && !hasFilters && !selecting" class="mb-12" aria-labelledby="recent-heading">
             <div class="editorial-rule mb-5">
               <div>
                 <p class="section-kicker">CONTINUE READING</p>
@@ -747,14 +753,15 @@ async function applyBatchEdit() {
             <div class="editorial-rule mb-6">
               <div>
                 <p class="section-kicker">LIBRARY</p>
-                <h2 id="library-heading" class="section-title">{{ lib.query || lib.activeTag ? '筛选结果' : '全部漫画' }}</h2>
+                <h2 id="library-heading" class="section-title">{{ hasFilters ? '筛选结果' : '全部漫画' }}</h2>
               </div>
               <span class="editorial-count">CATALOG / {{ String(lib.filtered.length).padStart(3, '0') }}</span>
             </div>
             <div class="mb-6 flex flex-wrap items-center gap-2" aria-label="智能书架与排序">
               <button v-for="shelf in [
                 ['all', '全部'], ['unread', '未开始'], ['reading', '阅读中'], ['completed', '已完成'], ['favorite', '收藏'], ['source-issues', '来源异常'],
-              ]" :key="shelf[0]" class="chip" :class="lib.shelfFilter === shelf[0] ? 'chip--active' : ''" @click="lib.shelfFilter = shelf[0] as any">{{ shelf[1] }}</button>
+              ]" :key="shelf[0]" class="chip" :class="lib.shelfFilter === shelf[0] ? 'chip--active' : ''" :aria-pressed="lib.shelfFilter === shelf[0]" @click="lib.shelfFilter = shelf[0] as any">{{ shelf[1] }}</button>
+              <button v-if="hasFilters" class="comic-btn comic-btn--ghost" @click="clearFilters">清除筛选</button>
               <label class="ml-auto flex min-h-11 items-center gap-2 border-b border-[color:var(--line)] px-2 text-xs text-[color:var(--text-dim)]">
                 排序
                 <select v-model="lib.sortMode" class="bg-transparent py-2 font-semibold text-[color:var(--text)] outline-none">
@@ -763,7 +770,7 @@ async function applyBatchEdit() {
               </label>
             </div>
 
-            <div v-if="selecting" class="library-grid">
+            <div v-if="selecting && lib.filtered.length" class="library-grid">
               <ComicCard
                 v-for="(c, index) in pagedSelection"
                 :key="c.id"
@@ -775,7 +782,7 @@ async function applyBatchEdit() {
               />
             </div>
 
-            <div v-else class="library-grid">
+            <div v-else-if="lib.filtered.length" class="library-grid">
               <template v-for="(g, groupIndex) in pagedSeriesGroups" :key="g.series">
                 <ComicCard v-if="g.count === 1" :comic="g.comics[0]" :index="(catalogPage - 1) * PAGE_SIZE + groupIndex + 1" @open="emit('open', $event)" @edit="openEdit" @reset="confirmReset" @favorite="lib.toggleFavorite" @rescan="rescanComic" @relink="relinkComic" @delete-source="deleteSource" @remove="confirmRemove" />
                 <template v-else>
@@ -801,6 +808,14 @@ async function applyBatchEdit() {
                 </template>
               </template>
             </div>
+            <div v-else class="grid min-h-[52vh] place-items-center" aria-live="polite">
+              <div class="editorial-empty halftone-accent max-w-md">
+                <div class="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-xl bg-[color:var(--surface-3)] text-[color:var(--text-dim)]"><Icon name="search" :size="24" /></div>
+                <h2 class="text-xl font-bold text-[color:var(--text)]">没有找到匹配的漫画</h2>
+                <p class="mt-2 text-sm text-[color:var(--text-dim)]">试试更短的书名，或清除当前筛选条件。</p>
+                <button class="comic-btn comic-btn--ghost mt-5" @click="clearFilters">清除筛选</button>
+              </div>
+            </div>
             <nav v-if="catalogPages > 1" class="mt-8 flex items-center justify-center gap-3" aria-label="书库分页">
               <button class="comic-btn comic-btn--ghost" :disabled="catalogPage <= 1" @click="catalogPage--">上一页</button>
               <span class="editorial-count">{{ catalogPage }} / {{ catalogPages }}</span>
@@ -808,15 +823,6 @@ async function applyBatchEdit() {
             </nav>
           </section>
         </template>
-
-        <section v-else-if="lib.comics.length" class="grid min-h-[52vh] place-items-center" aria-live="polite">
-          <div class="editorial-empty halftone-accent max-w-md">
-            <div class="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-xl bg-[color:var(--surface-3)] text-[color:var(--text-dim)]"><Icon name="search" :size="24" /></div>
-            <h2 class="text-xl font-bold text-[color:var(--text)]">没有找到匹配的漫画</h2>
-            <p class="mt-2 text-sm text-[color:var(--text-dim)]">试试更短的书名，或清除当前筛选条件。</p>
-            <button class="comic-btn comic-btn--ghost mt-5" @click="lib.query = ''; lib.activeTag = null">清除筛选</button>
-          </div>
-        </section>
 
         <section v-else class="grid min-h-[58vh] place-items-center">
           <div class="editorial-empty halftone-accent max-w-lg">
